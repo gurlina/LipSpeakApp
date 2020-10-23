@@ -5,6 +5,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 
+enum TtsState { playing, stopped }
+
 class CameraScreen extends StatefulWidget {
   CameraScreen({Key key}) : super(key: key);
 
@@ -17,6 +19,8 @@ class CameraScreenState extends State<CameraScreen> {
   List<CameraDescription> _cameras;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   bool _isRecording = false;
+  bool _busy = false;
+  bool _cancelled = false;
 
   final List<Phrase> phraseBook = Phrase.getPhraseBook();
   int _currentPhraseIdx = 0;
@@ -29,10 +33,13 @@ class CameraScreenState extends State<CameraScreen> {
   double _rate = 0.5;
 
   String _newVoiceText;
+  TtsState ttsState = TtsState.stopped;
+
+  get isPlaying => ttsState == TtsState.playing;
+  get isStopped => ttsState == TtsState.stopped;
 
   @override
   void initState() {
-    _deleteMediaFiles();
     _initCamera();
     super.initState();
     _initTts();
@@ -40,6 +47,9 @@ class CameraScreenState extends State<CameraScreen> {
 
   @override
   Widget build(BuildContext context) {
+    List<Widget> stackChildren = [];
+    stackChildren.clear();
+
     if (_controller != null) {
       if (!_controller.value.isInitialized) {
         return Container();
@@ -54,24 +64,48 @@ class CameraScreenState extends State<CameraScreen> {
       );
     }
 
+    // Build the Stack of Widgets
+    if (!_busy) {
+      stackChildren.add(_buildCameraPreview());
+
+      stackChildren.add(Positioned(
+        top: 24.0,
+        right: 12.0,
+        child: IconButton(
+            icon: Icon(Icons.switch_camera, color: Colors.white),
+            onPressed: _onCameraSwitch),
+      ));
+    } else {
+      stackChildren.add(const Opacity(
+        child: ModalBarrier(dismissible: false, color: Colors.deepPurple),
+        opacity: 0.8,
+      ));
+      stackChildren.add(const Center(child: CircularProgressIndicator()));
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: Text("LipSpeak"),
       ),
       backgroundColor: Theme.of(context).backgroundColor,
+      drawer: Drawer(
+        child: ListView(
+          children: [
+            ListTile(
+              title: Text("Phrase Book"),
+              onTap: () => {},
+            ),
+            ListTile(
+              title: Text("Speech Settings"),
+              onTap: () => {},
+            )
+          ],
+        ),
+      ),
       key: _scaffoldKey,
       extendBody: true,
       body: Stack(
-        children: <Widget>[
-          _buildCameraPreview(),
-          Positioned(
-            top: 24.0,
-            left: 12.0,
-            child: IconButton(
-                icon: Icon(Icons.switch_camera, color: Colors.white),
-                onPressed: _onCameraSwitch),
-          )
-        ],
+        children: stackChildren,
       ),
       bottomNavigationBar: _buildBottomNavigationBar(),
     );
@@ -149,6 +183,33 @@ class CameraScreenState extends State<CameraScreen> {
   }
 
   Widget _buildBottomNavigationBar() {
+    IconButton _button;
+
+    if (_busy) {
+      _button = IconButton(
+          icon: Icon(
+            Icons.cancel_sharp,
+            size: 28.0,
+          ),
+          onPressed: () {
+            stopProcessing();
+          });
+    } else {
+      _button = IconButton(
+          icon: Icon(
+            Icons.videocam,
+            size: 28.0,
+            color: (_isRecording) ? Colors.red : Colors.black,
+          ),
+          onPressed: () {
+            if (_isRecording) {
+              stopVideoRecording();
+            } else {
+              startVideoRecording();
+            }
+          });
+    }
+
     return Container(
       color: Theme.of(context).bottomAppBarColor,
       height: 100.0,
@@ -159,19 +220,7 @@ class CameraScreenState extends State<CameraScreen> {
           CircleAvatar(
             backgroundColor: Colors.white,
             radius: 28.0,
-            child: IconButton(
-                icon: Icon(
-                  Icons.videocam,
-                  size: 28.0,
-                  color: (_isRecording) ? Colors.red : Colors.black,
-                ),
-                onPressed: () {
-                  if (_isRecording) {
-                    stopVideoRecording();
-                  } else {
-                    startVideoRecording();
-                  }
-                }),
+            child: _button,
           ),
         ],
       ),
@@ -240,31 +289,89 @@ class CameraScreenState extends State<CameraScreen> {
 
     try {
       await _controller.stopVideoRecording();
-      await _processVideo();
+
       setState(() {
         _isRecording = false;
+        _busy = true;
       });
+
+      await _processVideo();
     } on CameraException catch (e) {
       _showCameraException(e);
       setState(() {
         _isRecording = false;
+        _busy = false;
       });
       return null;
     }
   }
 
+  Future<void> stopProcessing() async {
+    var result = await flutterTts.stop();
+    if (result == 1) {
+      setState(() {
+        _busy = false;
+        ttsState = TtsState.stopped;
+      });
+    }
+  }
+
+  Future analyzeVideo() async {
+    // TODO: placeholder for video processing
+    // DEBUG: emulate processing delay
+    debugPrint('busy processing...');
+    await Future.delayed(Duration(seconds: 1));
+  }
+
   Future<void> _processVideo() async {
     // TODO - add processing
-    _deleteMediaFiles();
-    _onPhraseChange(_currentPhraseIdx);
 
-    _speak();
+    await analyzeVideo();
+
+    _deleteMediaFiles();
+
+    if (!_busy) return;
+
+    _onPhraseChange(_currentPhraseIdx);
+    await _speak();
+
+    setState(() {
+      _busy = false;
+    });
   }
 
   void _initTts() {
     flutterTts = FlutterTts();
 
     flutterTts.setLanguage(_language);
+
+    flutterTts.setStartHandler(() {
+      setState(() {
+        print("Playing");
+        ttsState = TtsState.playing;
+      });
+    });
+
+    flutterTts.setCompletionHandler(() {
+      setState(() {
+        print("Complete");
+        ttsState = TtsState.stopped;
+      });
+    });
+
+    flutterTts.setCancelHandler(() {
+      setState(() {
+        print("Cancel");
+        ttsState = TtsState.stopped;
+      });
+    });
+
+    flutterTts.setErrorHandler((msg) {
+      setState(() {
+        print("error: $msg");
+        ttsState = TtsState.stopped;
+      });
+    });
   }
 
   void _onPhraseChange(int index) {
