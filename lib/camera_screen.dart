@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:lipspeak/model/phrase_book.dart';
+import 'package:lipspeak/util/colors.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
@@ -20,7 +21,6 @@ class CameraScreenState extends State<CameraScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   bool _isRecording = false;
   bool _busy = false;
-  bool _cancelled = false;
 
   final List<Phrase> phraseBook = Phrase.getPhraseBook();
   int _currentPhraseIdx = 0;
@@ -76,27 +76,66 @@ class CameraScreenState extends State<CameraScreen> {
             onPressed: _onCameraSwitch),
       ));
     } else {
-      stackChildren.add(const Opacity(
-        child: ModalBarrier(dismissible: false, color: Colors.deepPurple),
-        opacity: 0.8,
-      ));
-      stackChildren.add(const Center(child: CircularProgressIndicator()));
+      // stackChildren.add(const Opacity(
+      //   child: ModalBarrier(dismissible: false, color: secondaryOrangeDark),
+      //   opacity: 0.5,
+      // ));
+      stackChildren
+          .add(ModalBarrier(dismissible: false, color: secondaryOrange400));
+      stackChildren.add(const Center(
+          child: SizedBox(
+        height: 200,
+        width: 200,
+        child: CircularProgressIndicator(
+          strokeWidth: 10.0,
+        ),
+      )));
     }
 
     return Scaffold(
+      // appBar: AppBar(
+      //   title: Row(
+      //     mainAxisAlignment: MainAxisAlignment.spaceAround,
+      //     children: <Widget>[
+      //       Image.asset(
+      //         'images/header.jpg',
+      //         fit: BoxFit.contain,
+      //         height: 120.0,
+      //       ),
+      //     ],
+      //   ),
+      // ),
       appBar: AppBar(
-        title: Text("LipSpeak"),
+        title: Text("Speech Generator"),
       ),
       backgroundColor: Theme.of(context).backgroundColor,
       drawer: Drawer(
         child: ListView(
+          padding: EdgeInsets.zero,
           children: [
+            Container(
+              height: 160,
+              child: DrawerHeader(
+                decoration: BoxDecoration(
+                    image: DecorationImage(
+                        image: AssetImage("images/header.jpg"),
+                        fit: BoxFit.cover)),
+                child: Text(""),
+              ),
+            ),
             ListTile(
+              leading: Icon(Icons.book_outlined),
               title: Text("Phrase Book"),
               onTap: () => {},
             ),
             ListTile(
+              leading: Icon(Icons.mic),
               title: Text("Speech Settings"),
+              onTap: () => {},
+            ),
+            ListTile(
+              leading: Icon(Icons.help_outline),
+              title: Text("Help"),
               onTap: () => {},
             )
           ],
@@ -190,6 +229,7 @@ class CameraScreenState extends State<CameraScreen> {
           icon: Icon(
             Icons.cancel_sharp,
             size: 28.0,
+            color: Colors.black,
           ),
           onPressed: () {
             stopProcessing();
