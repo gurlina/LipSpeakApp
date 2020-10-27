@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:lipspeak/phrasebook.dart';
+//import 'package:lipspeak/phrasebook.dart';
 import 'package:lipspeak/util/colors.dart';
 //import 'package:flutter_camera/camera_screen.dart';
 

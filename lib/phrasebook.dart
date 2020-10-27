@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:lipspeak/model/phrase_book.dart';
 import 'package:lipspeak/phrase_card.dart';
+import 'package:lipspeak/speech_generator.dart';
 
 class PhraseBook extends StatefulWidget {
   PhraseBook({Key key}) : super(key: key);
@@ -27,6 +28,7 @@ class _PhraseBookState extends State<PhraseBook> {
 
   @override
   Widget build(BuildContext context) {
+    SpeechGenerator speechGen = SpeechGenerator();
     return Scaffold(
       appBar: AppBar(
         title: Text("Phrasebook"),
@@ -47,7 +49,11 @@ class _PhraseBookState extends State<PhraseBook> {
               return ListView.builder(
                   itemCount: snapshot.data.documents.length,
                   itemBuilder: (context, int index) {
-                    return PhraseCard(snapshot: snapshot.data, index: index);
+                    return PhraseCard(
+                      snapshot: snapshot.data,
+                      index: index,
+                      speechGen: speechGen,
+                    );
                     //return Text(snapshot.data.documents[index]['text']);
                   });
             }

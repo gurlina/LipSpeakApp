@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:lipspeak/model/phrase_book.dart';
+import 'package:lipspeak/speech_generator.dart';
 
 class PhraseCard extends StatelessWidget {
   final QuerySnapshot snapshot;
   final int index;
-  const PhraseCard({Key key, this.snapshot, this.index}) : super(key: key);
+  final SpeechGenerator speechGen;
+  const PhraseCard({Key key, this.snapshot, this.index, this.speechGen})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -29,11 +32,11 @@ class PhraseCard extends StatelessWidget {
               children: [
                 ListTile(
                   title: Text(
-                    "${snapshotData["query"]}",
+                    "${snapshotData[PhraseFS.fbQueryFieldName]}",
                     style: TextStyle(fontWeight: FontWeight.w400, fontSize: 20),
                   ),
                   subtitle: Text(
-                    snapshotData["text"],
+                    snapshotData[PhraseFS.fbTextFieldName],
                     style: TextStyle(fontSize: 18),
                   ),
                   leading: IconButton(
@@ -41,7 +44,10 @@ class PhraseCard extends StatelessWidget {
                         Icons.mic,
                         size: 40,
                       ),
-                      onPressed: () {}),
+                      onPressed: () {
+                        speechGen.speakPhrase(
+                            snapshotData[PhraseFS.fbTextFieldName]);
+                      }),
                 ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
@@ -93,9 +99,7 @@ class PhraseCard extends StatelessWidget {
                                                 .text.isNotEmpty &&
                                             textInputController
                                                 .text.isNotEmpty) {
-                                          FirebaseFirestore.instance
-                                              .collection(
-                                                  PhraseFS.fbCollectionName)
+                                          collectionReference
                                               .doc(docId)
                                               .update({
                                             PhraseFS.fbQueryFieldName:
@@ -131,6 +135,4 @@ class PhraseCard extends StatelessWidget {
       ],
     );
   }
-
-  void _playText() {}
 }
