@@ -1,6 +1,8 @@
 import 'dart:io';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:lipspeak/model/phrase_book.dart';
+import 'package:lipspeak/phrasebook.dart';
 import 'package:lipspeak/util/colors.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/material.dart';
@@ -23,6 +25,8 @@ class CameraScreenState extends State<CameraScreen> {
   bool _busy = false;
 
   final List<Phrase> phraseBook = Phrase.getPhraseBook();
+  Future<List<PhraseFS>> phraseBookFS;
+
   int _currentPhraseIdx = 0;
 
   // TTS - need to refactor
@@ -43,6 +47,8 @@ class CameraScreenState extends State<CameraScreen> {
     _initCamera();
     super.initState();
     _initTts();
+
+    phraseBookFS = PhraseFS.getPhraseBook();
   }
 
   @override
@@ -124,10 +130,17 @@ class CameraScreenState extends State<CameraScreen> {
               ),
             ),
             ListTile(
-              leading: Icon(Icons.book_outlined),
-              title: Text("Phrase Book"),
-              onTap: () => {},
-            ),
+                leading: Icon(Icons.book_outlined),
+                title: Text("Phrase Book"),
+                // onTap: () {
+                //   Navigator.push(
+                //     context,
+                //     MaterialPageRoute(builder: (context) => PhraseBook()),
+                //   );
+                // },
+                onTap: () {
+                  _navigateToPhrasebook(context);
+                }),
             ListTile(
               leading: Icon(Icons.mic),
               title: Text("Speech Settings"),
@@ -415,11 +428,17 @@ class CameraScreenState extends State<CameraScreen> {
   }
 
   void _onPhraseChange(int index) {
+    // TODO: move phrasebook update to video processing
     setState(() {
-      _newVoiceText = phraseBook[index].text;
+      //_newVoiceText = phraseBook[index].text;
+      phraseBookFS.then((value) {
+        _newVoiceText = value[index].text;
+        _currentPhraseIdx = (_currentPhraseIdx + 1) % value.length;
+      });
+      //_newVoiceText = phraseBookFS[index].text;
 
       // debug: increment phrase index for now
-      _currentPhraseIdx = (_currentPhraseIdx + 1) % phraseBook.length;
+      //_currentPhraseIdx = (_currentPhraseIdx + 1) % phraseBookFS.length;
     });
   }
 
@@ -436,5 +455,20 @@ class CameraScreenState extends State<CameraScreen> {
         await flutterTts.speak(_newVoiceText);
       }
     }
+  }
+
+  _navigateToPhrasebook(BuildContext context) async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => PhraseBook()),
+    );
+
+    phraseBookFS = PhraseFS.getPhraseBook();
+
+    // After the Selection Screen returns a result, hide any previous snackbars
+    // and show the new result.
+    // Scaffold.of(context)
+    //   ..removeCurrentSnackBar()
+    //   ..showSnackBar(SnackBar(content: Text("$result")));
   }
 }

@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:lipspeak/phrasebook.dart';
 import 'package:lipspeak/util/colors.dart';
 //import 'package:flutter_camera/camera_screen.dart';
+
+import 'package:firebase_core/firebase_core.dart';
 
 import 'camera_screen.dart';
 
@@ -22,11 +25,11 @@ ThemeData _buildLipspeakTheme() {
       inputDecorationTheme: InputDecorationTheme(
           border: OutlineInputBorder(
               borderSide: BorderSide(color: primaryIndigoLight),
-              borderRadius: BorderRadius.circular(12))));
-  // floatingActionButtonTheme: base.floatingActionButtonTheme.copyWith(
-  //     elevation: 7,
-  //     splashColor: primaryIndigoLight,
-  //     backgroundColor: secondaryOrange400));
+              borderRadius: BorderRadius.circular(12))),
+      floatingActionButtonTheme: base.floatingActionButtonTheme.copyWith(
+          elevation: 7,
+          //splashColor: primaryIndigoLight,
+          backgroundColor: primaryIndigoDark));
 }
 
 _buildLipspeakTextTheme(TextTheme base) {
@@ -36,8 +39,28 @@ _buildLipspeakTextTheme(TextTheme base) {
   //.apply(fontFamily: "Rubik"));
 }
 
-void main() {
+// void main() {
+//   WidgetsFlutterBinding.ensureInitialized();
+//   SystemChrome.setEnabledSystemUIOverlays([SystemUiOverlay.bottom]).then((_) {
+//     runApp(MyApp());
+//   });
+// }
+
+// void main() async {
+//   // Must initialize the default Firebase app prior to calling BoardApp
+//   WidgetsFlutterBinding.ensureInitialized();
+//   await Firebase.initializeApp();
+
+//   runApp(new MaterialApp(
+//     home: PhraseBook(),
+//   ));
+// }
+
+void main() async {
+  // Must initialize the default Firebase app prior to calling BoardApp
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+
   SystemChrome.setEnabledSystemUIOverlays([SystemUiOverlay.bottom]).then((_) {
     runApp(MyApp());
   });
