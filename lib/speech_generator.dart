@@ -14,7 +14,7 @@ class SpeechGenerator {
 
   SpeechGenerator({this.volume = 0.5, this.pitch = 1.0, this.rate = 0.5}) {
     initTts();
-    configureTts(pitch: this.pitch, volume: this.volume, rate: this.rate);
+    //configureTts(pitch: this.pitch, volume: this.volume, rate: this.rate);
   }
 
   get isPlaying => ttsState == TtsState.playing;

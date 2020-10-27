@@ -1,8 +1,8 @@
 import 'dart:io';
 //import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter_tts/flutter_tts.dart';
 import 'package:lipspeak/model/phrase_book.dart';
 import 'package:lipspeak/phrasebook.dart';
+import 'package:lipspeak/speech_generator.dart';
 import 'package:lipspeak/util/colors.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/material.dart';
@@ -24,30 +24,19 @@ class CameraScreenState extends State<CameraScreen> {
   bool _isRecording = false;
   bool _busy = false;
 
-  final List<Phrase> phraseBook = Phrase.getPhraseBook();
+  //final List<Phrase> phraseBook = Phrase.getPhraseBook();
   Future<List<PhraseFS>> phraseBookFS;
 
+  SpeechGenerator speechGen = SpeechGenerator();
   int _currentPhraseIdx = 0;
 
-  // TTS - need to refactor
-  FlutterTts flutterTts;
-  String _language = 'en-us';
-  double _volume = 0.5;
-  double _pitch = 1.0;
-  double _rate = 0.5;
-
   String _newVoiceText;
-  TtsState ttsState = TtsState.stopped;
-
-  get isPlaying => ttsState == TtsState.playing;
-  get isStopped => ttsState == TtsState.stopped;
 
   @override
   void initState() {
     _initCamera();
     super.initState();
-    _initTts();
-
+    _configureSpeechGen();
     phraseBookFS = PhraseFS.getPhraseBook();
   }
 
@@ -177,11 +166,14 @@ class CameraScreenState extends State<CameraScreen> {
     });
   }
 
+  Future<void> _configureSpeechGen() async {
+    await speechGen.configureTts();
+  }
+
   @override
   void dispose() {
     _controller?.dispose();
     super.dispose();
-    flutterTts.stop();
   }
 
   Future<void> _deleteMediaFiles() async {
@@ -360,11 +352,10 @@ class CameraScreenState extends State<CameraScreen> {
   }
 
   Future<void> stopProcessing() async {
-    var result = await flutterTts.stop();
+    var result = await speechGen.stop();
     if (result == 1) {
       setState(() {
         _busy = false;
-        ttsState = TtsState.stopped;
       });
     }
   }
@@ -385,7 +376,7 @@ class CameraScreenState extends State<CameraScreen> {
 
     if (!_busy) return;
 
-    _onPhraseChange(_currentPhraseIdx);
+    await _onPhraseChange(_currentPhraseIdx);
     await _speak();
 
     setState(() {
@@ -393,41 +384,7 @@ class CameraScreenState extends State<CameraScreen> {
     });
   }
 
-  void _initTts() {
-    flutterTts = FlutterTts();
-
-    flutterTts.setLanguage(_language);
-
-    flutterTts.setStartHandler(() {
-      setState(() {
-        print("Playing");
-        ttsState = TtsState.playing;
-      });
-    });
-
-    flutterTts.setCompletionHandler(() {
-      setState(() {
-        print("Complete");
-        ttsState = TtsState.stopped;
-      });
-    });
-
-    flutterTts.setCancelHandler(() {
-      setState(() {
-        print("Cancel");
-        ttsState = TtsState.stopped;
-      });
-    });
-
-    flutterTts.setErrorHandler((msg) {
-      setState(() {
-        print("error: $msg");
-        ttsState = TtsState.stopped;
-      });
-    });
-  }
-
-  void _onPhraseChange(int index) {
+  Future<void> _onPhraseChange(int index) async {
     // TODO: move phrasebook update to video processing
     setState(() {
       //_newVoiceText = phraseBook[index].text;
@@ -444,15 +401,11 @@ class CameraScreenState extends State<CameraScreen> {
 
   Future _speak() async {
     debugPrint("_speak()");
-    await flutterTts.setVolume(_volume);
-    await flutterTts.setSpeechRate(_rate);
-    await flutterTts.setPitch(_pitch);
 
     if (_newVoiceText != null) {
       if (_newVoiceText.isNotEmpty) {
         debugPrint("$_newVoiceText");
-        await flutterTts.awaitSpeakCompletion(true);
-        await flutterTts.speak(_newVoiceText);
+        await speechGen.speakPhrase(_newVoiceText);
       }
     }
   }
@@ -460,7 +413,10 @@ class CameraScreenState extends State<CameraScreen> {
   _navigateToPhrasebook(BuildContext context) async {
     final result = await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => PhraseBook()),
+      MaterialPageRoute(
+          builder: (context) => PhraseBook(
+                speechGen: this.speechGen,
+              )),
     );
 
     phraseBookFS = PhraseFS.getPhraseBook();

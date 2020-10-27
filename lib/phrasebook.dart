@@ -5,7 +5,8 @@ import 'package:lipspeak/phrase_card.dart';
 import 'package:lipspeak/speech_generator.dart';
 
 class PhraseBook extends StatefulWidget {
-  PhraseBook({Key key}) : super(key: key);
+  final SpeechGenerator speechGen;
+  PhraseBook({Key key, this.speechGen}) : super(key: key);
 
   @override
   _PhraseBookState createState() => _PhraseBookState();
@@ -28,7 +29,7 @@ class _PhraseBookState extends State<PhraseBook> {
 
   @override
   Widget build(BuildContext context) {
-    SpeechGenerator speechGen = SpeechGenerator();
+    //SpeechGenerator speechGen = SpeechGenerator();
     return Scaffold(
       appBar: AppBar(
         title: Text("Phrasebook"),
@@ -52,7 +53,7 @@ class _PhraseBookState extends State<PhraseBook> {
                     return PhraseCard(
                       snapshot: snapshot.data,
                       index: index,
-                      speechGen: speechGen,
+                      speechGen: widget.speechGen,
                     );
                     //return Text(snapshot.data.documents[index]['text']);
                   });
