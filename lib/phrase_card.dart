@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:lipspeak/model/phrase_book.dart';
 import 'package:lipspeak/speech_generator.dart';
+import 'package:lipspeak/util/colors.dart';
 
 class PhraseCard extends StatelessWidget {
   final QuerySnapshot snapshot;
@@ -43,6 +44,7 @@ class PhraseCard extends StatelessWidget {
                       icon: Icon(
                         Icons.mic,
                         size: 40,
+                        color: primaryIndigoDark,
                       ),
                       onPressed: () {
                         speechGen.speakPhrase(
@@ -56,6 +58,7 @@ class PhraseCard extends StatelessWidget {
                         icon: Icon(
                           Icons.edit,
                           size: 25,
+                          color: primaryIndigoDark,
                         ),
                         onPressed: () async {
                           await showDialog(
@@ -122,6 +125,7 @@ class PhraseCard extends StatelessWidget {
                         icon: Icon(
                           Icons.delete_forever_outlined,
                           size: 25,
+                          color: primaryIndigoDark,
                         ),
                         onPressed: () async {
                           await collectionReference.doc(docId).delete();

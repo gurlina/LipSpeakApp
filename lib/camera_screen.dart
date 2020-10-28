@@ -67,7 +67,11 @@ class CameraScreenState extends State<CameraScreen> {
         top: 24.0,
         right: 12.0,
         child: IconButton(
-            icon: Icon(Icons.switch_camera, color: Colors.white),
+            icon: Icon(
+              Icons.switch_camera,
+              color: Colors.white,
+              size: 30,
+            ),
             onPressed: _onCameraSwitch),
       ));
     } else {

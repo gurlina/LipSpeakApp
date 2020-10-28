@@ -22,6 +22,7 @@ ThemeData _buildLipspeakTheme() {
       cardColor: secondaryOrange400,
       bottomAppBarColor: barColor,
       textTheme: _buildLipspeakTextTheme(base.textTheme),
+      splashColor: primaryIndigoLight,
       inputDecorationTheme: InputDecorationTheme(
           border: OutlineInputBorder(
               borderSide: BorderSide(color: primaryIndigoLight),
