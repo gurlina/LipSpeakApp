@@ -61,10 +61,11 @@ class SpeechGenerator {
     }
   }
 
-  Future stop() async {
+  Future<int> stop() async {
     var result = await flutterTts.stop();
     if (result == 1) {
       ttsState = TtsState.stopped;
     }
+    return result;
   }
 }
