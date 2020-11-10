@@ -67,22 +67,44 @@ class PhraseCard extends StatelessWidget {
                                 contentPadding: EdgeInsets.all(10),
                                 content: Column(
                                   children: [
-                                    Text("Please fill out the form to update."),
+                                    Padding(
+                                      padding: const EdgeInsets.all(30.0),
+                                      child: Text("Update the Phrase:",
+                                          style: TextStyle(
+                                              color: Colors.indigo.shade900,
+                                              fontSize: 24)),
+                                    ),
                                     Expanded(
-                                        child: TextField(
-                                      autofocus: true,
-                                      autocorrect: true,
-                                      decoration: InputDecoration(
-                                          labelText: "Keyword(s):"),
-                                      controller: queryInputController,
+                                        child: Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: TextField(
+                                        autofocus: true,
+                                        autocorrect: true,
+                                        decoration: InputDecoration(
+                                          icon:
+                                              Icon(Icons.camera_front_outlined),
+                                          labelText: "Keyword(s)",
+                                          labelStyle: TextStyle(fontSize: 20),
+                                        ),
+                                        controller: queryInputController,
+                                      ),
                                     )),
                                     Expanded(
-                                        child: TextField(
-                                      autofocus: true,
-                                      autocorrect: true,
-                                      decoration: InputDecoration(
-                                          labelText: "Generated phrase:"),
-                                      controller: textInputController,
+                                        child: Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: TextField(
+                                        autofocus: true,
+                                        autocorrect: true,
+                                        maxLines: 2,
+                                        decoration: InputDecoration(
+                                          icon: Icon(
+                                            Icons.mic_outlined,
+                                          ),
+                                          labelText: "Generated Speech",
+                                          labelStyle: TextStyle(fontSize: 20),
+                                        ),
+                                        controller: textInputController,
+                                      ),
                                     )),
                                   ],
                                 ),
@@ -95,7 +117,13 @@ class PhraseCard extends StatelessWidget {
 
                                         Navigator.pop(context);
                                       },
-                                      child: Text("Cancel")),
+                                      child: Text(
+                                        "Cancel",
+                                        style: TextStyle(
+                                            color: primaryIndigoDark,
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.bold),
+                                      )),
                                   FlatButton(
                                       onPressed: () {
                                         if (queryInputController
@@ -114,7 +142,13 @@ class PhraseCard extends StatelessWidget {
                                           });
                                         }
                                       },
-                                      child: Text("Update"))
+                                      child: Text(
+                                        "Update",
+                                        style: TextStyle(
+                                            color: primaryIndigoDark,
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.bold),
+                                      ))
                                 ],
                               ));
                         }),

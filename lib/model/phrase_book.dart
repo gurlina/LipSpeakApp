@@ -45,6 +45,10 @@ class PhraseFS {
           PhraseFS(res.data()[fbTextFieldName], res.data()[fbQueryFieldName]));
     });
 
+    if (_phraseBook.isNotEmpty) {
+      _phraseBook.sort((a, b) => a.queries.compareTo(b.queries));
+    }
+
     return _phraseBook;
   }
 }

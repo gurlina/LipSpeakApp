@@ -18,7 +18,7 @@ ThemeData _buildLipspeakTheme() {
       accentColor: primaryIndigoDark,
       primaryColor: primaryIndigo900,
       scaffoldBackgroundColor: secondaryBackgroundWhite,
-      hintColor: textOnPrimaryWhite,
+      hintColor: Colors.grey.shade500,
       cardColor: secondaryOrange400,
       bottomAppBarColor: barColor,
       textTheme: _buildLipspeakTextTheme(base.textTheme),

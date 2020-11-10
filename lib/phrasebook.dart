@@ -1,8 +1,11 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:lipspeak/model/phrase_book.dart';
 import 'package:lipspeak/phrase_card.dart';
 import 'package:lipspeak/speech_generator.dart';
+import 'package:lipspeak/util/colors.dart';
 
 class PhraseBook extends StatefulWidget {
   final SpeechGenerator speechGen;
@@ -69,27 +72,47 @@ class _PhraseBookState extends State<PhraseBook> {
           contentPadding: EdgeInsets.all(10),
           content: Column(
             children: [
-              Text("Add new entry to the phrasebook:"),
+              Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Text(
+                  "Add New Phrase:",
+                  style: TextStyle(color: Colors.indigo.shade900, fontSize: 24),
+                ),
+              ),
               Expanded(
-                  child: TextField(
-                autofocus: true,
-                autocorrect: true,
-                decoration: InputDecoration(
-                    icon: Icon(Icons.camera_front_outlined),
-                    labelText: "Keyword(s)",
-                    helperText: "separate multiple keywords with spaces",
-                    helperMaxLines: 3),
-                controller: queryInputController,
+                  child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: TextField(
+                  autofocus: true,
+                  autocorrect: true,
+                  maxLines: 2,
+                  decoration: InputDecoration(
+                      floatingLabelBehavior: FloatingLabelBehavior.always,
+                      icon: Icon(Icons.camera_front_outlined),
+                      labelText: "Keyword(s)",
+                      labelStyle: TextStyle(fontSize: 20),
+                      hintText: "separate keywords with spaces",
+                      hintStyle: TextStyle(color: Colors.indigo.shade100),
+                      hintMaxLines: 2,
+                      helperMaxLines: 3),
+                  controller: queryInputController,
+                ),
               )),
               Expanded(
-                  child: TextField(
-                autofocus: true,
-                autocorrect: true,
-                decoration: InputDecoration(
-                  icon: Icon(Icons.mic_outlined),
-                  labelText: "Generated phrase",
+                  child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: TextField(
+                  autofocus: true,
+                  autocorrect: true,
+                  maxLines: 2,
+                  decoration: InputDecoration(
+                    floatingLabelBehavior: FloatingLabelBehavior.always,
+                    icon: Icon(Icons.mic_outlined),
+                    labelText: "Generated Speech",
+                    labelStyle: TextStyle(fontSize: 20),
+                  ),
+                  controller: textInputController,
                 ),
-                controller: textInputController,
               )),
             ],
           ),
@@ -101,7 +124,11 @@ class _PhraseBookState extends State<PhraseBook> {
 
                   Navigator.pop(context);
                 },
-                child: Text("Cancel")),
+                child: Text("Cancel",
+                    style: TextStyle(
+                        color: primaryIndigoDark,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold))),
             FlatButton(
                 onPressed: () {
                   if (queryInputController.text.isNotEmpty &&
@@ -121,7 +148,11 @@ class _PhraseBookState extends State<PhraseBook> {
                     }).catchError((error) => print(error));
                   }
                 },
-                child: Text("Save"))
+                child: Text("Save",
+                    style: TextStyle(
+                        color: primaryIndigoDark,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold)))
           ],
         ));
   }

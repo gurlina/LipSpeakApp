@@ -1,14 +1,23 @@
+//import 'dart:html';
 import 'dart:io';
 //import 'package:cloud_firestore/cloud_firestore.dart';
+//import 'package:firebase_ml_vision/firebase_ml_vision.dart';
+//import 'package:gallery_saver/gallery_saver.dart';
+import 'package:http_parser/http_parser.dart';
+//import 'package:lipspeak/face_detector.dart';
 import 'package:lipspeak/model/phrase_book.dart';
 import 'package:lipspeak/phrasebook.dart';
 import 'package:lipspeak/speech_generator.dart';
 import 'package:lipspeak/util/colors.dart';
+//import 'package:lipspeak/util/face_painter.dart';
+import 'package:lipspeak/util/focus_widget.dart';
+//import 'package:lipspeak/video_player.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
-
-enum TtsState { playing, stopped }
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:mime/mime.dart';
 
 class CameraScreen extends StatefulWidget {
   CameraScreen({Key key}) : super(key: key);
@@ -19,10 +28,20 @@ class CameraScreen extends StatefulWidget {
 
 class CameraScreenState extends State<CameraScreen> {
   CameraController _controller;
+  //ImageRotation _cameraRotation;
   List<CameraDescription> _cameras;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   bool _isRecording = false;
   bool _busy = false;
+  //bool _detectingFaces = false;
+  String _videoFile;
+  Size imageSize;
+
+  final String serverUri =
+      "http://ec2-54-201-218-219.us-west-2.compute.amazonaws.com:5000/handle_form";
+  //Face faceDetected;
+
+  //FrameFaceDetector _frameFaceDetector = FrameFaceDetector();
 
   //final List<Phrase> phraseBook = Phrase.getPhraseBook();
   Future<List<PhraseFS>> phraseBookFS;
@@ -36,12 +55,15 @@ class CameraScreenState extends State<CameraScreen> {
   void initState() {
     _initCamera();
     super.initState();
+
     _configureSpeechGen();
     phraseBookFS = PhraseFS.getPhraseBook();
   }
 
   @override
   Widget build(BuildContext context) {
+    final Widget previewMask =
+        CameraFocus.circle(color: Colors.black.withOpacity(0.5));
     List<Widget> stackChildren = [];
     stackChildren.clear();
 
@@ -62,6 +84,16 @@ class CameraScreenState extends State<CameraScreen> {
     // Build the Stack of Widgets
     if (!_busy) {
       stackChildren.add(_buildCameraPreview());
+
+      stackChildren.add(
+        Center(
+          child: previewMask,
+        ),
+      );
+
+      // stackChildren.add(CustomPaint(
+      //   painter: FacePainter(face: faceDetected, imageSize: imageSize),
+      // ));
 
       stackChildren.add(Positioned(
         top: 24.0,
@@ -161,12 +193,20 @@ class CameraScreenState extends State<CameraScreen> {
     _cameras = await availableCameras();
 
     // initialize CameraController (_camera[1] is the front camera)
-    _controller = CameraController(_cameras[1], ResolutionPreset.medium);
+    _controller = CameraController(_cameras[1], ResolutionPreset.medium,
+        enableAudio: false);
+
+    // _cameraRotation = rotationIntToImageRotation(
+    //   _cameras[1].sensorOrientation,
+    // );
+
     _controller.initialize().then((_) {
       if (!mounted) {
         return;
       }
       setState(() {});
+
+      //_frameFaces();
     });
   }
 
@@ -210,7 +250,12 @@ class CameraScreenState extends State<CameraScreen> {
       await _controller.dispose();
     }
 
-    _controller = CameraController(cameraDescription, ResolutionPreset.medium);
+    _controller = CameraController(cameraDescription, ResolutionPreset.medium,
+        enableAudio: false);
+
+    // _cameraRotation = rotationIntToImageRotation(
+    //   cameraDescription.sensorOrientation,
+    // );
 
     _controller.addListener(() {
       if (mounted) setState(() {});
@@ -328,6 +373,9 @@ class CameraScreenState extends State<CameraScreen> {
       return null;
     }
 
+    setState(() {
+      _videoFile = filePath;
+    });
     return filePath;
   }
 
@@ -339,12 +387,19 @@ class CameraScreenState extends State<CameraScreen> {
     try {
       await _controller.stopVideoRecording();
 
+      //await GallerySaver.saveVideo(_videoFile);
+      //debugPrint("Saved video to Gallery!");
+
       setState(() {
         _isRecording = false;
         _busy = true;
       });
 
       await _processVideo();
+
+      // Navigator.of(context).push(new MaterialPageRoute(
+      //     builder: (BuildContext context) =>
+      //         new VideoPlayerScreen(_videoFile)));
     } on CameraException catch (e) {
       _showCameraException(e);
       setState(() {
@@ -360,28 +415,118 @@ class CameraScreenState extends State<CameraScreen> {
     if (result == 1) {
       setState(() {
         _busy = false;
+        _videoFile = null;
       });
     }
   }
 
-  Future analyzeVideo() async {
+  Future<int> analyzeVideo() async {
     // TODO: placeholder for video processing
-    // DEBUG: emulate processing delay
+
     debugPrint('busy processing...');
-    await Future.delayed(Duration(seconds: 1));
+
+    int retCode = -1;
+
+    if (File(_videoFile).existsSync()) {
+      final mimeTypeData = lookupMimeType(_videoFile).split('/');
+
+      final predictRequest =
+          http.MultipartRequest('POST', Uri.parse(serverUri));
+
+      // final file = await http.MultipartFile.fromPath('video', _videoFile,
+      //     contentType: MediaType(mimeTypeData[0], mimeTypeData[1]));
+      final file = await http.MultipartFile.fromPath('file', _videoFile,
+          contentType: MediaType(mimeTypeData[0], mimeTypeData[1]));
+
+      //predictRequest.fields['ext'] = mimeTypeData[1];
+      predictRequest.files.add(file);
+
+      try {
+        final streamedResponse = await predictRequest.send();
+        final predictResponse =
+            await http.Response.fromStream(streamedResponse);
+
+        if (predictResponse.statusCode == 200) {
+          debugPrint("Successfully processed predict request");
+
+          final Map<String, dynamic> responseData =
+              json.decode(predictResponse.body);
+          retCode = responseData['index'];
+          debugPrint("Phrase ID: ${retCode.toString()}");
+        } else {
+          debugPrint(
+              "Error while processing predict request: ${predictResponse.statusCode.toString()}");
+        }
+      } catch (e) {
+        print(e);
+      }
+    }
+
+    // if (File(_videoFile).existsSync()) {
+    //   debugPrint("Processing video file $_videoFile");
+    //   debugPrint("File length: ${File(_videoFile).lengthSync().toString()}");
+
+    //   FirebaseVisionImage visionImage =
+    //       FirebaseVisionImage.fromFilePath(_videoFile);
+
+    //   if (visionImage != null) {
+    //     debugPrint("Created vision image");
+
+    //     final FaceDetectorOptions faceDetectorOptions = FaceDetectorOptions(
+    //       enableTracking: true,
+    //       enableLandmarks: true,
+    //       enableContours: false,
+    //       enableClassification: true,
+    //       minFaceSize: 0.1,
+    //       mode: FaceDetectorMode.accurate,
+    //     );
+
+    //     debugPrint("Created face detector option");
+
+    //     final FaceDetector faceDetector =
+    //         FirebaseVision.instance.faceDetector(faceDetectorOptions);
+
+    //     debugPrint("Created face detector");
+    //     // try {
+    //     //   List<Face> faces = await faceDetector.processImage(visionImage);
+    //     //   debugPrint("Face detector finished processing");
+    //     // } on Exception catch (e) {
+    //     //   print(e);
+    //     // }
+    //   } else {
+    //     print("Failed to create vision image from file");
+    //   }
+    // } else {
+
+    // DEBUG: emulate processing delay
+    //await Future.delayed(Duration(seconds: 1));
+    //}
+
+    return retCode;
   }
 
   Future<void> _processVideo() async {
     // TODO - add processing
 
-    await analyzeVideo();
+    int phraseId = await analyzeVideo();
 
     _deleteMediaFiles();
 
     if (!_busy) return;
 
-    await _onPhraseChange(_currentPhraseIdx);
-    await _speak();
+    if (phraseId >= 0) {
+      await phraseBookFS.then((value) {
+        setState(() {
+          _newVoiceText =
+              (phraseId < value.length) ? value[phraseId].text : null;
+        });
+      });
+
+      await _speak();
+    }
+
+    //await _onPhraseChange(_currentPhraseIdx);
+    //await _speak();
 
     setState(() {
       _busy = false;
@@ -431,4 +576,70 @@ class CameraScreenState extends State<CameraScreen> {
     //   ..removeCurrentSnackBar()
     //   ..showSnackBar(SnackBar(content: Text("$result")));
   }
+
+  // ImageRotation rotationIntToImageRotation(int rotation) {
+  //   switch (rotation) {
+  //     case 90:
+  //       return ImageRotation.rotation90;
+  //     case 180:
+  //       return ImageRotation.rotation180;
+  //     case 270:
+  //       return ImageRotation.rotation270;
+  //     default:
+  //       return ImageRotation.rotation0;
+  //   }
+  // }
+
+  Size getImageSize() {
+    return Size(
+      _controller.value.previewSize.height,
+      _controller.value.previewSize.width,
+    );
+  }
+
+  /// draws rectangles when detects faces
+  // Future<void> _frameFaces() async {
+  //   imageSize = getImageSize();
+  //   debugPrint("Image size: ${imageSize.toString()}");
+
+  //   await _controller.startImageStream((image) async {
+  //     if (_controller != null) {
+  //       // if its currently busy, avoids overprocessing
+  //       if (_detectingFaces) return;
+
+  //       _detectingFaces = true;
+
+  //       Future.delayed(const Duration(milliseconds: 300));
+  //       try {
+  //         List<Face> faces = await _frameFaceDetector.getFacesFromImage(image);
+
+  //         if (faces != null) {
+  //           if (faces.length > 0) {
+  //             // preprocessing the image
+  //             debugPrint("Face detected!");
+  //             setState(() {
+  //               faceDetected = faces[0];
+  //             });
+
+  //             // if (_saving) {
+  //             //   _saving = false;
+  //             //   _faceNetService.setCurrentPrediction(image, faceDetected);
+  //             // }
+
+  //           } else {
+  //             setState(() {
+  //               faceDetected = null;
+  //             });
+  //             //debugPrint("No faces found");
+  //           }
+  //         }
+
+  //         _detectingFaces = false;
+  //       } catch (e) {
+  //         print(e);
+  //         _detectingFaces = false;
+  //       }
+  //     }
+  //   });
+  // }
 }

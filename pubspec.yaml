@@ -23,10 +23,20 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  camera: ^0.5.8+10
-  path_provider: ^1.6.21
+  camera: ^0.5.8+11
+  path_provider: ^1.6.24
   flutter_tts:
   cloud_firestore:
+  http: ^0.12.2
+  http_parser: ^3.1.4
+  mime: ^0.9.7
+  #firebase_ml_vision: ^0.9.8
+  video_player: ^0.11.1+2
+  gallery_saver: ^2.0.1
+  #image: ^2.1.18
+  #image_picker: ^0.6.7+12
+  #tflite_flutter: ^0.5.0
+  #tflite_flutter_helper: ^0.1.2
 
 
   # The following adds the Cupertino Icons font to your application.
@@ -54,6 +64,7 @@ flutter:
   #   - images/a_dot_ham.jpeg
   assets:
     - images/header.jpg
+ #   - assets/face_detection_front.tflite
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.
