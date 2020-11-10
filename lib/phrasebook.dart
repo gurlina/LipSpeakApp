@@ -124,10 +124,10 @@ class _PhraseBookState extends State<PhraseBook> {
 
                   Navigator.pop(context);
                 },
-                child: Text("Cancel",
+                child: Text("CANCEL",
                     style: TextStyle(
                         color: primaryIndigoDark,
-                        fontSize: 20,
+                        fontSize: 18,
                         fontWeight: FontWeight.bold))),
             FlatButton(
                 onPressed: () {
@@ -148,10 +148,10 @@ class _PhraseBookState extends State<PhraseBook> {
                     }).catchError((error) => print(error));
                   }
                 },
-                child: Text("Save",
+                child: Text("SAVE",
                     style: TextStyle(
                         color: primaryIndigoDark,
-                        fontSize: 20,
+                        fontSize: 18,
                         fontWeight: FontWeight.bold)))
           ],
         ));

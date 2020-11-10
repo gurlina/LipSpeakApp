@@ -46,6 +46,7 @@ class PhraseFS {
     });
 
     if (_phraseBook.isNotEmpty) {
+      // sort alphabetically by queries
       _phraseBook.sort((a, b) => a.queries.compareTo(b.queries));
     }
 

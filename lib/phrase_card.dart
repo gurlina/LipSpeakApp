@@ -118,10 +118,10 @@ class PhraseCard extends StatelessWidget {
                                         Navigator.pop(context);
                                       },
                                       child: Text(
-                                        "Cancel",
+                                        "CANCEL",
                                         style: TextStyle(
                                             color: primaryIndigoDark,
-                                            fontSize: 20,
+                                            fontSize: 18,
                                             fontWeight: FontWeight.bold),
                                       )),
                                   FlatButton(
@@ -143,10 +143,10 @@ class PhraseCard extends StatelessWidget {
                                         }
                                       },
                                       child: Text(
-                                        "Update",
+                                        "UPDATE",
                                         style: TextStyle(
                                             color: primaryIndigoDark,
-                                            fontSize: 20,
+                                            fontSize: 18,
                                             fontWeight: FontWeight.bold),
                                       ))
                                 ],
@@ -162,7 +162,41 @@ class PhraseCard extends StatelessWidget {
                           color: primaryIndigoDark,
                         ),
                         onPressed: () async {
-                          await collectionReference.doc(docId).delete();
+                          await showDialog(
+                              context: context,
+                              barrierDismissible: false,
+                              builder: (BuildContext context) {
+                                return AlertDialog(
+                                  title: Text('Delete Phrase?'),
+                                  content: Text(
+                                      'This will permanently delete the phrase from your phrasebook. Are you sure you want to proceed?'),
+                                  actions: [
+                                    FlatButton(
+                                        onPressed: () {
+                                          Navigator.pop(context);
+                                        },
+                                        child: const Text('CANCEL',
+                                            style: TextStyle(
+                                                fontSize: 18,
+                                                color: primaryIndigoDark,
+                                                fontWeight: FontWeight.bold))),
+                                    FlatButton(
+                                        onPressed: () {
+                                          collectionReference
+                                              .doc(docId)
+                                              .delete()
+                                              .then((response) {
+                                            Navigator.pop(context);
+                                          });
+                                        },
+                                        child: const Text('DELETE',
+                                            style: TextStyle(
+                                                fontSize: 18,
+                                                color: primaryIndigoDark,
+                                                fontWeight: FontWeight.bold)))
+                                  ],
+                                );
+                              });
                         })
                   ],
                 )
