@@ -5,6 +5,7 @@ import 'package:lipspeak/util/colors.dart';
 //import 'package:flutter_camera/camera_screen.dart';
 
 import 'package:firebase_core/firebase_core.dart';
+import 'package:overlay_support/overlay_support.dart';
 
 import 'camera_screen.dart';
 
@@ -70,16 +71,18 @@ void main() async {
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Camera',
-      // theme: ThemeData(
-      //   primarySwatch: Colors.blue,
-      //   brightness: Brightness.dark,
-      //   backgroundColor: Colors.black,
-      //   bottomAppBarColor: barColor,
-      // ),
-      theme: _buildLipspeakTheme(),
-      home: HomePage(),
+    return OverlaySupport(
+      child: MaterialApp(
+        title: 'Camera',
+        // theme: ThemeData(
+        //   primarySwatch: Colors.blue,
+        //   brightness: Brightness.dark,
+        //   backgroundColor: Colors.black,
+        //   bottomAppBarColor: barColor,
+        // ),
+        theme: _buildLipspeakTheme(),
+        home: HomePage(),
+      ),
     );
   }
 }

@@ -1,5 +1,6 @@
 //import 'dart:html';
 import 'dart:io';
+import 'dart:ui';
 //import 'package:cloud_firestore/cloud_firestore.dart';
 //import 'package:firebase_ml_vision/firebase_ml_vision.dart';
 //import 'package:gallery_saver/gallery_saver.dart';
@@ -11,6 +12,7 @@ import 'package:lipspeak/speech_generator.dart';
 import 'package:lipspeak/util/colors.dart';
 //import 'package:lipspeak/util/face_painter.dart';
 import 'package:lipspeak/util/focus_widget.dart';
+import 'package:overlay_support/overlay_support.dart';
 //import 'package:lipspeak/video_player.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/material.dart';
@@ -48,8 +50,9 @@ class CameraScreenState extends State<CameraScreen> {
 
   SpeechGenerator speechGen = SpeechGenerator();
   int _currentPhraseIdx = 0;
-
   String _newVoiceText;
+
+  OverlaySupportEntry _notification;
 
   @override
   void initState() {
@@ -416,6 +419,7 @@ class CameraScreenState extends State<CameraScreen> {
       setState(() {
         _busy = false;
         _videoFile = null;
+        _notification?.dismiss();
       });
     }
   }
@@ -508,7 +512,10 @@ class CameraScreenState extends State<CameraScreen> {
   Future<void> _processVideo() async {
     // TODO - add processing
 
-    int phraseId = await analyzeVideo();
+    //int phraseId = await analyzeVideo();
+    // Debug
+    int phraseId = -1;
+    String query;
 
     _deleteMediaFiles();
 
@@ -516,20 +523,38 @@ class CameraScreenState extends State<CameraScreen> {
 
     if (phraseId >= 0) {
       await phraseBookFS.then((value) {
+        query = (phraseId < value.length) ? value[phraseId].queries : null;
         setState(() {
           _newVoiceText =
               (phraseId < value.length) ? value[phraseId].text : null;
         });
       });
-
-      await _speak();
+      if (query != null) {
+        _notification = showSimpleNotification(
+          Text(
+            query,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+                color: secondaryOrange400,
+                fontWeight: FontWeight.bold,
+                fontSize: 24),
+          ),
+          autoDismiss: false,
+        );
+        await _speak();
+      }
+    } else {
+      await _showErrorDialog();
     }
 
     //await _onPhraseChange(_currentPhraseIdx);
     //await _speak();
 
+    //OverlaySupportEntry.of(context).dismiss();
+
     setState(() {
       _busy = false;
+      _notification?.dismiss();
     });
   }
 
@@ -594,6 +619,44 @@ class CameraScreenState extends State<CameraScreen> {
     return Size(
       _controller.value.previewSize.height,
       _controller.value.previewSize.width,
+    );
+  }
+
+  Future<void> _showErrorDialog() async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              Icon(
+                Icons.error_outlined,
+                color: Colors.red,
+                size: 40,
+              ),
+              Text('Video Processing Error'),
+            ],
+          ),
+          content: Text(
+            'LipSpeak was unable to recognize the phrase. Please try again.',
+            style: TextStyle(fontSize: 18),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text('DISMISS',
+                  style: TextStyle(
+                      fontSize: 18,
+                      color: primaryIndigoDark,
+                      fontWeight: FontWeight.bold)),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 
