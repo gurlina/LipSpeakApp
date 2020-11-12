@@ -52,4 +52,16 @@ class PhraseFS {
 
     return _phraseBook;
   }
+
+  // static Future<List<String>> getQueries() async {
+  //   List<String> _queries = new List<String>();
+
+  //   var fbCollection =
+  //       await FirebaseFirestore.instance.collection(fbCollectionName).get();
+  //   fbCollection.docs.forEach((res) {
+  //     _queries.add(res.data()[fbQueryFieldName]);
+  //   });
+
+  //   return _queries;
+  // }
 }

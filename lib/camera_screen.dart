@@ -10,6 +10,7 @@ import 'package:lipspeak/model/phrase_book.dart';
 import 'package:lipspeak/phrasebook.dart';
 import 'package:lipspeak/speech_generator.dart';
 import 'package:lipspeak/util/colors.dart';
+import 'package:lipspeak/util/config.dart';
 //import 'package:lipspeak/util/face_painter.dart';
 import 'package:lipspeak/util/focus_widget.dart';
 import 'package:overlay_support/overlay_support.dart';
@@ -20,6 +21,7 @@ import 'package:camera/camera.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:mime/mime.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class CameraScreen extends StatefulWidget {
   CameraScreen({Key key}) : super(key: key);
@@ -39,8 +41,6 @@ class CameraScreenState extends State<CameraScreen> {
   String _videoFile;
   Size imageSize;
 
-  final String serverUri =
-      "http://ec2-54-201-218-219.us-west-2.compute.amazonaws.com:5000/handle_form";
   //Face faceDetected;
 
   //FrameFaceDetector _frameFaceDetector = FrameFaceDetector();
@@ -176,8 +176,10 @@ class CameraScreenState extends State<CameraScreen> {
             ),
             ListTile(
               leading: Icon(Icons.help_outline),
-              title: Text("Help"),
-              onTap: () => {},
+              title: Text("About"),
+              onTap: () {
+                _showWebPage(aboutUrl);
+              },
             )
           ],
         ),
@@ -445,6 +447,18 @@ class CameraScreenState extends State<CameraScreen> {
       //predictRequest.fields['ext'] = mimeTypeData[1];
       predictRequest.files.add(file);
 
+      // await phraseBookFS.then((value) {
+      //   if (value != null) {
+      //     List<String> queries = new List<String>();
+      //     value.forEach((element) {
+      //       queries.add(element.queries);
+      //     });
+
+      //     Map phraseBook = {'queries': queries};
+      //     predictRequest.fields['phraseBook'] = json.encode(phraseBook);
+      //   }
+      // });
+
       try {
         final streamedResponse = await predictRequest.send();
         final predictResponse =
@@ -512,9 +526,9 @@ class CameraScreenState extends State<CameraScreen> {
   Future<void> _processVideo() async {
     // TODO - add processing
 
-    //int phraseId = await analyzeVideo();
+    int phraseId = await analyzeVideo();
     // Debug
-    int phraseId = -1;
+    //int phraseId = 3;
     String query;
 
     _deleteMediaFiles();
@@ -542,6 +556,8 @@ class CameraScreenState extends State<CameraScreen> {
           autoDismiss: false,
         );
         await _speak();
+      } else {
+        await _showErrorDialog();
       }
     } else {
       await _showErrorDialog();
@@ -658,6 +674,14 @@ class CameraScreenState extends State<CameraScreen> {
         );
       },
     );
+  }
+
+  void _showWebPage(String url) async {
+    if (await canLaunch(url)) {
+      await launch(url);
+    } else {
+      print('Unable to open URL $url');
+    }
   }
 
   /// draws rectangles when detects faces
