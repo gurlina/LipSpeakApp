@@ -160,19 +160,13 @@ class CameraScreenState extends State<CameraScreen> {
             ListTile(
                 leading: Icon(Icons.book_outlined),
                 title: Text("Phrase Book"),
-                // onTap: () {
-                //   Navigator.push(
-                //     context,
-                //     MaterialPageRoute(builder: (context) => PhraseBook()),
-                //   );
-                // },
                 onTap: () {
                   _navigateToPhrasebook(context);
                 }),
             ListTile(
               leading: Icon(Icons.mic),
               title: Text("Speech Settings"),
-              onTap: () => {},
+              onTap: () => {}, //placeholder
             ),
             ListTile(
               leading: Icon(Icons.help_outline),
