@@ -1,18 +1,18 @@
 {
   "images" : [
     {
-      "filename" : "header.jpg",
-      "idiom" : "iphone",
+      "filename" : "menu_header.jpg",
+      "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "header-1.jpg",
-      "idiom" : "iphone",
+      "filename" : "menu_header-1.jpg",
+      "idiom" : "universal",
       "scale" : "2x"
     },
     {
-      "filename" : "header-2.jpg",
-      "idiom" : "iphone",
+      "filename" : "menu_header-2.jpg",
+      "idiom" : "universal",
       "scale" : "3x"
     }
   ],
