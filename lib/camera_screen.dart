@@ -152,14 +152,14 @@ class CameraScreenState extends State<CameraScreen> {
               child: DrawerHeader(
                 decoration: BoxDecoration(
                     image: DecorationImage(
-                        image: AssetImage("images/header.jpg"),
+                        image: AssetImage("images/menu_header.PNG"),
                         fit: BoxFit.cover)),
                 child: Text(""),
               ),
             ),
             ListTile(
                 leading: Icon(Icons.book_outlined),
-                title: Text("Phrase Book"),
+                title: Text("Phrasebook"),
                 onTap: () {
                   _navigateToPhrasebook(context);
                 }),
@@ -441,17 +441,18 @@ class CameraScreenState extends State<CameraScreen> {
       //predictRequest.fields['ext'] = mimeTypeData[1];
       predictRequest.files.add(file);
 
-      // await phraseBookFS.then((value) {
-      //   if (value != null) {
-      //     List<String> queries = new List<String>();
-      //     value.forEach((element) {
-      //       queries.add(element.queries);
-      //     });
+      await phraseBookFS.then((value) {
+        if (value != null) {
+          List<String> queries = new List<String>();
+          value.forEach((element) {
+            queries.add(element.queries);
+          });
 
-      //     Map phraseBook = {'queries': queries};
-      //     predictRequest.fields['phraseBook'] = json.encode(phraseBook);
-      //   }
-      // });
+          Map phraseBook = {'queries': queries};
+          debugPrint(phraseBook.toString());
+          predictRequest.fields['phrasebook'] = json.encode(phraseBook);
+        }
+      });
 
       try {
         final streamedResponse = await predictRequest.send();
